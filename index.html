@@ -143,6 +143,13 @@
          }
       }
 
+      function slowDown(){
+        pointer.x -= pointer.x*0.05;
+        pointer.y -= pointer.y*0.05;
+        sleep(10);
+        console.log(pointer);
+      }
+
       function loop() {
 
         window.requestAnimationFrame(loop);
@@ -158,9 +165,9 @@
 
         context.strokeStyle = "#000000";
 
-        cube.rotateX(pointer.y * 0.0001);
-        cube.rotateY(-pointer.x * 0.0001);
-
+        cube.rotateX(pointer.y * 0.00001);
+        cube.rotateY(-pointer.x * 0.00001);
+        slowDown();
         context.fillStyle = "#800080";
 
         var vertices = project(cube.vertices, width, height);
@@ -194,30 +201,33 @@
 
       loop();
 
+      var startTime, endTime;
+      var milSecs = 0;
       window.addEventListener("mousedown", (event) => {
-
+        startTime = Date.now(0);
         tempPointer1.x = event.pageX ;
         tempPointer1.y = event.pageY ;
-        console.log(tempPointer1.x,tempPointer1.y);
+        console.log(tempPointer1.x,tempPointer1.y, startTime);
       });
 
       window.addEventListener("mouseup", (event) => {
-
+        endTime = Date.now(0);
         tempPointer2.x = event.pageX;
         tempPointer2.y = event.pageY;
-        console.log(tempPointer2.x,tempPointer2.y);
+        console.log(tempPointer2.x,tempPointer2.y, endTime);
+        milSecs = endTime - startTime;
         if(Math.abs(tempPointer2.x - tempPointer1.x) > Math.abs(tempPointer2.y - tempPointer1.y)){
           pointer.y = 0;
-          pointer.x = tempPointer2.x - tempPointer1.x;
+          pointer.x = (tempPointer2.x - tempPointer1.x) * (milSecs/5);
         }
         else if(Math.abs(tempPointer2.x - tempPointer1.x) < Math.abs(tempPointer2.y - tempPointer1.y)){
           pointer.x = 0;
-          pointer.y = tempPointer2.y - tempPointer1.y ;
+          pointer.y = (tempPointer2.y - tempPointer1.y) * (milSecs/5) ;
         }
         else{
           pointer.x = pointer.y = 0;
         }
-        console.log(pointer.x,pointer.y);
+        console.log(pointer.x,pointer.y, endTime - startTime);
 
       });
 
