@@ -50,15 +50,25 @@
       const Cube = function(x, y, z, size) {
 
         Point3D.call(this, x, y, z);
-        size *= 0.5;
-        this.vertices = [new Point3D(x - size, y - size, z - size),
-                         new Point3D(x + size, y - size, z - size),
-                         new Point3D(x + size, y + size, z - size),
-                         new Point3D(x - size, y + size, z - size),
-                         new Point3D(x - size, y - size, z + size),
-                         new Point3D(x + size, y - size, z + size),
-                         new Point3D(x + size, y + size, z + size),
-                         new Point3D(x - size, y + size, z + size)];
+        size /= 2; // As per origin
+
+        var x1 = x+ size;
+        var x2 = x- size;
+        var y1 = y+ size;
+        var y2 = y- size;
+        var z1 = z+ size;
+        var z2 = z- size;
+
+        var p0 = new Point3D(x2, y2, z2);
+        var p1 = new Point3D(x1, y2, z2);
+        var p2 = new Point3D(x1, y1, z2);
+        var p3 = new Point3D(x2, y1, z2);
+        var p4 = new Point3D(x2, y2, z1);
+        var p5 = new Point3D(x1, y2, z1);
+        var p6 = new Point3D(x1, y1, z1);
+        var p7 = new Point3D(x2, y1, z1);
+
+        this.vertices = [p0,p1,p2,p3,p4,p5,p6,p7];
 
         this.faces = [[0, 1, 2, 3], [0, 4, 5, 1], [1, 5, 6, 2], [3, 2, 6, 7], [0, 3, 7, 4], [4, 7, 6, 5]];
       };
@@ -70,9 +80,9 @@
           var cosine = Math.cos(radian);
           var sine   = Math.sin(radian);
 
-          for (let index = this.vertices.length - 1; index > -1; -- index) {
+          for (let i = this.vertices.length - 1; i > -1; --i) {
 
-            let p = this.vertices[index];
+            let p = this.vertices[i];
 
             let y = (p.y - this.y) * cosine - (p.z - this.z) * sine;
             let z = (p.y - this.y) * sine + (p.z - this.z) * cosine;
@@ -89,9 +99,9 @@
           var cosine = Math.cos(radian);
           var sine   = Math.sin(radian);
 
-          for (let index = this.vertices.length - 1; index > -1; -- index) {
+          for (let i = this.vertices.length - 1; i > -1; -- i) {
 
-            let p = this.vertices[index];
+            let p = this.vertices[i];
 
             let x = (p.z - this.z) * sine + (p.x - this.x) * cosine;
             let z = (p.z - this.z) * cosine - (p.x - this.x) * sine;
@@ -114,40 +124,38 @@
 
       var height = document.documentElement.clientHeight;
       var width = document.documentElement.clientWidth;
-
       function project(points3d, width, height) {
 
         var points2d = new Array(points3d.length);
 
-        var focal_length = 200;
+        var focal_length = 300; // length from camera to the screen
 
-        for (let index = points3d.length - 1; index >= 0; -- index) {
+        for (let i = points3d.length - 1; i >= 0; -- i) {
 
-          let p = points3d[index];
+          let p = points3d[i];
 
-          let x = p.x * (focal_length / p.z) + width * 0.5;
-          let y = p.y * (focal_length / p.z) + height * 0.5;
+          let x = p.x * (focal_length / p.z) + width * 0.5 ; // projection of points in a 2d plane
+          let y = p.y * (focal_length / p.z) + height * 0.5 ;
 
-          points2d[index] = new Point2D(x, y);
+          points2d[i] = new Point2D(x, y);
 
         }
 
         return points2d;
 
       }
-
       function sleep(miliseconds) {
          var currentTime = new Date().getTime();
 
          while (currentTime + miliseconds >= new Date().getTime()) {
          }
       }
-
+      //To decrease the speed of Rotation
       function slowDown(){
-        pointer.x -= pointer.x*0.05;
-        pointer.y -= pointer.y*0.05;
+        pointer.x -= Math.ceil(pointer.x*0.05);
+        pointer.y -= Math.ceil(pointer.y*0.05);
         sleep(10);
-        console.log(pointer);
+        //console.log(pointer);
       }
 
       function loop() {
@@ -168,24 +176,13 @@
         cube.rotateX(pointer.y * 0.00001);
         cube.rotateY(-pointer.x * 0.00001);
         slowDown();
-        context.fillStyle = "#800080";
+        context.fillStyle = "rgba(128,128,128,0.7)";
 
         var vertices = project(cube.vertices, width, height);
 
-        for (let index = cube.faces.length - 1; index > -1; -- index) {
+        for (let i = cube.faces.length - 1; i > -1; -- i) {
 
-          let face = cube.faces[index];
-
-          let p1 = cube.vertices[face[0]];
-          let p2 = cube.vertices[face[1]];
-          let p3 = cube.vertices[face[2]];
-
-          let v1 = new Point3D(p2.x - p1.x, p2.y - p1.y, p2.z - p1.z);
-          let v2 = new Point3D(p3.x - p1.x, p3.y - p1.y, p3.z - p1.z);
-
-          let n  = new Point3D(v1.y * v2.z - v1.z * v2.y, v1.z * v2.x - v1.x * v2.z, v1.x * v2.y - v1.y * v2.x);
-
-          if (-p1.x * n.x + -p1.y * n.y + -p1.z * n.z <= 0) {
+          let face = cube.faces[i];
 
             context.beginPath();
             context.moveTo(vertices[face[0]].x, vertices[face[0]].y);
@@ -195,7 +192,7 @@
             context.closePath();
             context.fill();
             context.stroke();
-          }
+
         }
       }
 
@@ -207,27 +204,27 @@
         startTime = Date.now(0);
         tempPointer1.x = event.pageX ;
         tempPointer1.y = event.pageY ;
-        console.log(tempPointer1.x,tempPointer1.y, startTime);
+        //console.log(tempPointer1.x,tempPointer1.y, startTime);
       });
 
       window.addEventListener("mouseup", (event) => {
         endTime = Date.now(0);
         tempPointer2.x = event.pageX;
         tempPointer2.y = event.pageY;
-        console.log(tempPointer2.x,tempPointer2.y, endTime);
+        //console.log(tempPointer2.x,tempPointer2.y, endTime);
         milSecs = endTime - startTime;
         if(Math.abs(tempPointer2.x - tempPointer1.x) > Math.abs(tempPointer2.y - tempPointer1.y)){
           pointer.y = 0;
-          pointer.x = (tempPointer2.x - tempPointer1.x) * (milSecs/5);
+          pointer.x = (tempPointer2.x - tempPointer1.x) * (milSecs);
         }
         else if(Math.abs(tempPointer2.x - tempPointer1.x) < Math.abs(tempPointer2.y - tempPointer1.y)){
           pointer.x = 0;
-          pointer.y = (tempPointer2.y - tempPointer1.y) * (milSecs/5) ;
+          pointer.y = (tempPointer2.y - tempPointer1.y) * (milSecs) ;
         }
         else{
           pointer.x = pointer.y = 0;
         }
-        console.log(pointer.x,pointer.y, endTime - startTime);
+        //console.log(pointer.x,pointer.y, endTime - startTime);
 
       });
 
